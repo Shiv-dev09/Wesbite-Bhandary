@@ -1,0 +1,139 @@
+# Trading assistant configuration.
+# This system is PAPER TRADING ONLY -- see README.md. Nothing here enables
+# live order placement; capital/risk figures below drive simulated sizing
+# and the daily stop rules only.
+
+db_path: "logs/trading_assistant.sqlite3"
+slippage_bps: 5.0   # simulated fill slippage in basis points, applied against LTP
+
+capital:
+  starting_capital: 25000.0
+  daily_profit_target: 2000.0
+  daily_max_loss: 500.0
+  max_capital_deployed_pct: 100.0
+  risk_per_trade_pct_min: 0.5
+  risk_per_trade_pct_max: 1.0
+
+risk_limits:
+  max_open_positions: 2
+  max_trades_per_day: 10
+  consecutive_loss_pause_minutes: 30
+  consecutive_losses_trigger: 3
+  min_risk_reward: 2.0
+  ideal_risk_reward: 3.0
+
+session_time:
+  scan_start: "09:15"
+  first_trade: "09:20"
+  no_new_entries_after: "14:45"
+  square_off_by: "15:15"
+
+safety_checks:
+  max_spread_pct: 0.3          # reject if bid/ask spread exceeds 0.3% of LTP
+  min_volume: 50000             # reject if cumulative session volume below this
+  max_atr_pct: 2.5               # reject if ATR is more than 2.5% of price (too volatile)
+  circuit_limit_buffer_pct: 1.0  # reject if within 1% of upper/lower circuit
+  min_available_margin_buffer_pct: 10.0  # always keep 10% of margin unused
+
+options:
+  strike_selection: "ATM"        # "ATM" or "ITM1"
+  min_open_interest: 500000
+  min_volume: 100000
+  min_delta: 0.35
+  max_days_to_expiry: 7
+  risk_free_rate: 0.065
+
+confirmation:
+  threshold: 0.65
+  weights:
+    trend: 0.20
+    momentum: 0.20
+    volume: 0.15
+    price_action: 0.15
+    vwap: 0.10
+    ema: 0.10
+    support_resistance: 0.10
+
+watchlist:
+  indices: ["NIFTY 50", "NIFTY BANK", "NIFTY FIN SERVICE"]
+  equities: ["RELIANCE", "HDFCBANK", "ICICIBANK", "INFY", "TCS", "SBIN", "AXISBANK", "KOTAKBANK"]
+  min_price: 100.0
+
+logging:
+  level: "INFO"
+  log_dir: "logs"
+  max_bytes: 5000000
+  backup_count: 5
+
+strategies:
+  opening_range_breakout:
+    enabled: true
+    params:
+      range_minutes: 15
+      breakout_buffer_pct: 0.1
+      sl_buffer_pct: 0.1
+
+  vwap_reversal:
+    enabled: true
+    params:
+      deviation_pct: 0.3
+      rsi_confirm_period: 14
+      rsi_oversold: 35
+      rsi_overbought: 65
+
+  ema_trend_following:
+    enabled: true
+    params:
+      fast_period: 9
+      slow_period: 21
+      min_slope_pct: 0.02
+
+  volume_breakout:
+    enabled: true
+    params:
+      lookback_bars: 20
+      volume_surge_multiple: 2.0
+      price_move_pct: 0.15
+
+  cpr_breakout:
+    enabled: true
+    params:
+      breakout_buffer_pct: 0.1
+      narrow_cpr_width_pct: 0.5
+
+  supertrend:
+    enabled: true
+    params:
+      atr_period: 10
+      multiplier: 3.0
+
+  rsi_momentum:
+    enabled: true
+    params:
+      period: 14
+      oversold: 30
+      overbought: 70
+      momentum_confirm_bars: 3
+
+  macd_confirmation:
+    enabled: true
+    params:
+      fast_period: 12
+      slow_period: 26
+      signal_period: 9
+
+  option_momentum:
+    enabled: true
+    params:
+      underlying_ema_period: 9
+      min_underlying_move_pct: 0.15
+      iv_lookback_bars: 20
+
+  banknifty_scalping:
+    enabled: true
+    params:
+      symbol: "NIFTY BANK"
+      fast_ema: 5
+      slow_ema: 13
+      target_points: 40
+      sl_points: 20
