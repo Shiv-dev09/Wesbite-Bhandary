@@ -52,17 +52,6 @@ def _daily_ohlc_map(bars: list[Bar]) -> dict[date, tuple[float, float, float]]:
     return {d: (max(b.high for b in gb), min(b.low for b in gb), gb[-1].close) for d, gb in groups.items()}
 
 
-def _session_bars(bars: list[Bar], current_time) -> list[Bar]:
-    current_date = current_time.date()
-    idx = len(bars)
-    start = idx
-    for i in range(idx - 1, -1, -1):
-        if bars[i].timestamp.date() != current_date:
-            break
-        start = i
-    return bars[start:idx]
-
-
 class BacktestEngine:
     def __init__(self, config: AppConfig) -> None:
         self.config = config
@@ -113,7 +102,7 @@ class BacktestEngine:
                 daily_state = DailyState(trade_date=current_date)
 
             atr_val = atr_ind.latest_atr(current_bars, 14) or 0.0
-            session = _session_bars(current_bars, now)
+            session = vwap_ind.session_bars_only(current_bars, now)
             vwap_val = vwap_ind.session_vwap(session) or quote.ltp
 
             prev_idx = bisect.bisect_left(sorted_dates, current_date) - 1
@@ -209,7 +198,7 @@ class BacktestEngine:
             strategy_name=strategy.name,
             symbol=symbol,
             trade_pnls=trade_pnls,
-            total_pnl=sum(trade_pnls),
+            total_pnl=float(sum(trade_pnls)),
             win_rate=metrics.win_rate(trade_pnls),
             profit_factor=metrics.profit_factor(trade_pnls),
             expectancy=metrics.expectancy(trade_pnls),

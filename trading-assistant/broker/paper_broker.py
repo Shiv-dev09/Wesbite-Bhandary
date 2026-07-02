@@ -91,6 +91,29 @@ class PaperBroker(BrokerInterface):
     def get_open_positions(self) -> list[Position]:
         return list(self._open_positions.values())
 
+    def restore_open_positions(self, db_rows) -> None:
+        """Rebuilds in-memory open-position state (and deployed capital)
+        from JournalDB.get_open_trades() rows. Needed because each
+        `main.py run-cycle` invocation is a fresh process -- the broker
+        has no memory of prior cycles except what's in the journal DB."""
+        self._open_positions.clear()
+        self._deployed_capital = 0.0
+        for row in db_rows:
+            position = Position(
+                trade_id=row["id"],
+                symbol=row["symbol"],
+                side=Signal(row["side"]),
+                quantity=row["qty"],
+                entry_price=row["entry_price"],
+                initial_sl=row["initial_sl"],
+                trailing_sl=row["trailing_sl"],
+                target=row["target"],
+                strategy=row["strategy"],
+                entry_time=datetime.fromisoformat(row["entry_time"]),
+            )
+            self._open_positions[position.trade_id] = position
+            self._deployed_capital += position.entry_price * position.quantity
+
     def update_trailing_stops(self, atr_by_symbol: dict[str, float]) -> None:
         for position in self._open_positions.values():
             atr = atr_by_symbol.get(position.symbol)

@@ -3,7 +3,22 @@ from the session's intraday bars as cumulative(typical_price * volume) /
 cumulative(volume)."""
 from __future__ import annotations
 
+from datetime import datetime
+
 from indicators.types import Bar
+
+
+def session_bars_only(bars: list[Bar], current_time: datetime) -> list[Bar]:
+    """Slices trailing bars down to just the current calendar day, so VWAP
+    (and any other session-scoped indicator) resets at each new session
+    instead of blending across days. Assumes `bars` is sorted oldest-first."""
+    current_date = current_time.date()
+    start = len(bars)
+    for i in range(len(bars) - 1, -1, -1):
+        if bars[i].timestamp.date() != current_date:
+            break
+        start = i
+    return bars[start:]
 
 
 def session_vwap(bars: list[Bar]) -> float | None:
