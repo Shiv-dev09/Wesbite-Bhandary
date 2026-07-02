@@ -1,0 +1,12 @@
+[project]
+name = "trading-assistant"
+version = "0.1.0"
+description = "NSE intraday paper-trading decision-support system"
+requires-python = ">=3.10"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
+
+[tool.setuptools]
+packages = ["config", "broker", "strategies", "indicators", "risk", "journal", "dashboard", "backtest", "utils"]
